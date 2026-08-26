@@ -61,3 +61,10 @@ of mock choreography; single-purpose release gates; no config/CLI framework; del
 reordered to prove the two release blockers first (machined mount propagation, extension
 artifact through the existing publisher).
 Final doc: .journal/001/ARCHITECTURE.md — awaiting user review.
+
+## 2026-08-26 10:05 — Implementation plan added
+Planner agent produced PLAN.md from ARCHITECTURE.md under a zero-drift constraint.
+Verified: 4 phases mirror architecture §7 delivery order; builder selection and other
+open points are represented as decision gates (PLAN.md §2) rather than silently resolved;
+final package/payload boundaries restated verbatim; per-phase gates, risks, acceptance
+criteria, and file-level targets included. Doc: .journal/001/PLAN.md.
