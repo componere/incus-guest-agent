@@ -1,0 +1,31 @@
+name: incus-guest-agent
+variant: scratch
+shell: /bin/bash
+dependencies:
+  - stage: base
+steps:
+  - env:
+      GOPATH: /tmp/go
+    cachePaths:
+      - /.cache/go-build
+      - /tmp/go/pkg
+    build:
+      - |
+        cd /pkg/src
+        CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.version={{ .VERSION }}" -o ./incus-guest-agent .
+    install:
+      - |
+        install -D -m 0755 /pkg/src/incus-guest-agent /rootfs/usr/local/lib/containers/incus-guest-agent/incus-guest-agent
+        install -D -m 0644 /pkg/incus-guest-agent.yaml /rootfs/usr/local/etc/containers/incus-guest-agent.yaml
+    test:
+      - |
+        /rootfs/usr/local/lib/containers/incus-guest-agent/incus-guest-agent --version
+        mkdir -p /extensions-validator-rootfs
+        cp -r /rootfs/ /extensions-validator-rootfs/rootfs
+        cp /pkg/manifest.yaml /extensions-validator-rootfs/manifest.yaml
+        /extensions-validator validate --rootfs=/extensions-validator-rootfs --pkg-name="${PKG_NAME}"
+finalize:
+  - from: /rootfs
+    to: /rootfs
+  - from: /pkg/manifest.yaml
+    to: /

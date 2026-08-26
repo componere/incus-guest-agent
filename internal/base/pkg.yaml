@@ -1,0 +1,9 @@
+name: base
+variant: scratch
+shell: /bin/bash
+dependencies:
+  - image: ghcr.io/siderolabs/tools:v1.15.0-alpha.0-2-gd102f15
+  - image: ghcr.io/siderolabs/extensions-validator:84cecb0
+finalize:
+  - from: /
+    to: /

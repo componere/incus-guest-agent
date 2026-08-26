@@ -1,0 +1,19 @@
+name: incus-guest-agent
+container:
+  entrypoint: ./incus-guest-agent
+  mounts:
+    - source: /run
+      destination: /var/run
+      type: bind
+      options:
+        - rshared
+        - rbind
+        - rw
+    - source: /dev
+      destination: /dev
+      type: bind
+      options:
+        - rshared
+        - rbind
+        - rw
+restart: always
