@@ -13,8 +13,15 @@ You need:
 - an Incus virtual machine running Talos Linux;
 - Incus host access that can change the instance configuration;
 - `talosctl` access to the target Talos node;
-- Docker Buildx to resolve the release image digest; and
-- a local checkout of this repository for the canonical patch template.
+- Docker Buildx to resolve the release image digest;
+- a local checkout of this repository for the canonical patch template; and
+- public, anonymous read access to `ghcr.io/componere/incus-guest-agent`.
+
+The canonical patch has no `imagePullSecrets`. A private GHCR package is not
+supported by the proven profile. Before changing Talos, run the digest command
+below from a workstation that has no GHCR credentials configured. Success
+proves that the node can use the same anonymous registry path.
+
 
 The production acceptance test used Incus 7.3 and Talos 1.13.9. Other versions have not passed this repository's live matrix.
 

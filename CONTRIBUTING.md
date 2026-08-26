@@ -46,3 +46,15 @@ Release Please derives release notes and version changes from Conventional
 Commit subjects. Do not create release tags manually or enable a publisher to
 work around a failed validation gate.
 
+The canonical Talos patch pulls the GHCR image anonymously and has no
+`imagePullSecrets`. After the first image publication creates the package:
+
+1. link `ghcr.io/componere/incus-guest-agent` to this repository in the package
+   settings;
+2. set package visibility to public; and
+3. run `docker buildx imagetools inspect` from an environment with no GHCR
+   credentials to prove anonymous digest resolution.
+
+A private package will leave Talos nodes in an image-pull failure. Supporting a
+private registry requires a separately reviewed and live-tested pod profile.
+
