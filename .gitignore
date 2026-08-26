@@ -7,6 +7,9 @@
 .journal/
 .wt/
 
+# Reference repo clones (read-only research material; never committed)
+ref/
+
 # Environment
 .env
 .env.*
