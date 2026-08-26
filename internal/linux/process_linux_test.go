@@ -32,14 +32,13 @@ func TestProcessRunForwardsSIGTERMToProcessGroup(t *testing.T) {
 	proc.TermWaiter = NewWaiter(helperTimeout)
 	proc.KillWaiter = NewWaiter(time.Millisecond)
 
-	done := runProcess(t, proc, ctx)
+	done := runProcess(ctx, t, proc)
 	require.NoError(t, waitForFile(parentMark, helperTimeout))
 	require.NoError(t, waitForFile(childMark, helperTimeout))
 	cancel()
 
 	err := waitProcess(t, done, helperTimeout)
-	require.Error(t, err)
-	assert.ErrorIs(t, err, agent.ErrShutdown)
+	require.ErrorIs(t, err, agent.ErrShutdown)
 	assert.FileExists(t, filepath.Join(dir, "parent-term"))
 	assert.FileExists(t, filepath.Join(dir, "child-term"))
 }
@@ -54,9 +53,8 @@ func TestProcessRunAdoptsAndReapsOrphans(t *testing.T) {
 	proc.TermWaiter = NewWaiter(helperTimeout)
 	proc.KillWaiter = NewWaiter(time.Millisecond)
 
-	err := waitProcess(t, runProcess(t, proc, context.Background()), helperTimeout)
-	require.Error(t, err)
-	assert.ErrorIs(t, err, agent.ErrUnexpectedExit)
+	err := waitProcess(t, runProcess(context.Background(), t, proc), helperTimeout)
+	require.ErrorIs(t, err, agent.ErrUnexpectedExit)
 	assert.FileExists(t, ready)
 	assert.FileExists(t, exited)
 }
@@ -73,13 +71,12 @@ func TestProcessRunEscalatesToSIGKILLAfterInjectedGrace(t *testing.T) {
 	proc.TermWaiter = NewWaiter(0)
 	proc.KillWaiter = NewWaiter(helperTimeout)
 
-	done := runProcess(t, proc, ctx)
+	done := runProcess(ctx, t, proc)
 	require.NoError(t, waitForFile(ready, helperTimeout))
 	cancel()
 
 	err := waitProcess(t, done, helperTimeout)
-	require.Error(t, err)
-	assert.ErrorIs(t, err, agent.ErrShutdown)
+	require.ErrorIs(t, err, agent.ErrShutdown)
 	assert.NoFileExists(t, filepath.Join(dir, "term-exit"))
 }
 
@@ -95,7 +92,7 @@ func newTestProcess(binary string, dir string) *Process {
 }
 
 // runProcess starts [Process.Run] in the background and returns its result channel.
-func runProcess(t *testing.T, proc *Process, ctx context.Context) <-chan error {
+func runProcess(ctx context.Context, t *testing.T, proc *Process) <-chan error {
 	t.Helper()
 
 	done := make(chan error, 1)
@@ -121,7 +118,7 @@ func waitProcess(t *testing.T, done <-chan error, timeout time.Duration) error {
 	}
 }
 
-// waitForFile returns nil once path exists or os.ErrNotExist after timeout.
+// waitForFile returns nil once path exists or [os.ErrNotExist] after timeout.
 func waitForFile(path string, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {

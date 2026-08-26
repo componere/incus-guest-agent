@@ -64,6 +64,20 @@ type supervisor struct {
 	kill agent.Waiter
 }
 
+// supervisorState tracks process-tree shutdown and reaping state.
+type supervisorState struct {
+	// direct is the direct child's exit status, if observed.
+	direct *syscall.WaitStatus
+	// requested reports whether context cancellation initiated shutdown.
+	requested bool
+	// killSent reports whether shutdown escalated to SIGKILL.
+	killSent bool
+	// grace emits when the active shutdown grace period ends.
+	grace <-chan error
+	// ctxDone emits when the caller requests shutdown.
+	ctxDone <-chan struct{}
+}
+
 // NewProcess constructs a [Process] that runs the staged incus-agent binary.
 func NewProcess() *Process {
 	return &Process{
@@ -84,6 +98,7 @@ func (p *Process) Run(ctx context.Context) error {
 		return fmt.Errorf("enable child subreaper: %w", err)
 	}
 
+	//nolint:gosec,noctx // Binary is explicit; Run owns graceful process-group cancellation.
 	command := exec.Command(p.Binary)
 	command.Dir = p.Dir
 	command.Stdin = p.Stdin
@@ -127,48 +142,75 @@ func (p *Process) killWaiter() agent.Waiter {
 
 // wait forwards shutdown signals and reaps every descendant.
 func (s *supervisor) wait() error {
-	var (
-		direct    *syscall.WaitStatus
-		requested bool
-		killSent  bool
-		grace     <-chan error
-		ctxDone   = s.ctx.Done()
-	)
+	state := supervisorState{ctxDone: s.ctx.Done()}
 
 	for {
 		select {
-		case <-ctxDone:
-			ctxDone = nil
-			requested = true
-			if err := signalProcessGroup(s.pid, syscall.SIGTERM); err != nil {
+		case <-state.ctxDone:
+			if err := s.requestShutdown(&state); err != nil {
 				return err
 			}
-			grace = startWait(s.term)
 		case event := <-s.events:
-			status, done, err := handleWait(event, s.pid, requested, direct)
-			if status != nil {
-				direct = status
-				if grace == nil {
-					if signalErr := signalProcessGroup(s.pid, syscall.SIGTERM); signalErr != nil {
-						return signalErr
-					}
-					grace = startWait(s.term)
-				}
-			}
+			done, err := s.consumeWait(&state, event)
 			if done {
 				return err
 			}
-		case <-grace:
-			if killSent {
-				return fmt.Errorf("%w: process tree did not exit after SIGKILL", agent.ErrUnexpectedExit)
-			}
-			if err := signalProcessGroup(s.pid, syscall.SIGKILL); err != nil {
+		case <-state.grace:
+			if err := s.escalateShutdown(&state); err != nil {
 				return err
 			}
-			killSent = true
-			grace = startWait(s.kill)
 		}
 	}
+}
+
+// requestShutdown begins graceful shutdown after context cancellation.
+func (s *supervisor) requestShutdown(state *supervisorState) error {
+	state.ctxDone = nil
+	state.requested = true
+
+	return s.startTermination(state)
+}
+
+// consumeWait applies one child-reaper result to the supervisor state.
+func (s *supervisor) consumeWait(state *supervisorState, event childWait) (bool, error) {
+	status, done, err := handleWait(event, s.pid, state.requested, state.direct)
+	if status == nil {
+		return done, err
+	}
+
+	state.direct = status
+	if state.grace != nil {
+		return done, err
+	}
+	if signalErr := s.startTermination(state); signalErr != nil {
+		return true, signalErr
+	}
+
+	return done, err
+}
+
+// startTermination sends SIGTERM and starts the graceful shutdown deadline.
+func (s *supervisor) startTermination(state *supervisorState) error {
+	if err := signalProcessGroup(s.pid, syscall.SIGTERM); err != nil {
+		return err
+	}
+	state.grace = startWait(s.term)
+
+	return nil
+}
+
+// escalateShutdown sends SIGKILL or reports a process tree that survived it.
+func (s *supervisor) escalateShutdown(state *supervisorState) error {
+	if state.killSent {
+		return fmt.Errorf("%w: process tree did not exit after SIGKILL", agent.ErrUnexpectedExit)
+	}
+	if err := signalProcessGroup(s.pid, syscall.SIGKILL); err != nil {
+		return err
+	}
+	state.killSent = true
+	state.grace = startWait(s.kill)
+
+	return nil
 }
 
 // handleWait consumes one reaper event. A non-nil status is the direct child's
