@@ -60,3 +60,20 @@ Corrections and gaps before approval:
 6. A true scratch image and the current melange/apko Wolfi image are different packaging choices. Choose one. Reusing the current pipeline also requires changing its nonroot runtime account or overriding it in the pod.
 
 Decision: approve a disposable static-pod spike, not the architecture revision yet. Acceptance is the same real-agent chain as session 001 plus cold boot, hot media add, forced container restart, machine-config image update, and no-API-server observability.
+
+## 2026-08-26 12:59 — Static pod passes the live acceptance matrix
+Built and published a disposable two-architecture Wolfi image from the proven wrapper, then cold-booted a fresh Talos v1.13.9 single-node cluster as Incus VM `talos-agent-staticpod-spike` on `sandbox01`. The pod ran in `kube-system` as UID/GID 0 with `privileged: true`, `hostNetwork: true`, and `/dev` mounted from the host. The evidence source is commit `33f93b2` on pushed branch `spike/static-pod`.
+
+Results:
+
+1. Cold boot and hot-add pass. The static pod started before agent media existed and logged `waiting for Incus configuration media under /dev/sr*`. Hot-adding `agent:config` exposed `/dev/sr0`; the wrapper staged the five required files and started the real host-supplied Incus agent.
+2. The Talos seccomp blocker is absent on this path. The real agent opened its AF_VSOCK listener rather than failing with `operation not permitted`. Incus reported guest OS, kernel, process, disk, memory, and network data.
+3. The real nonce round trip passes through a second pod. After setting `user.staticpod-nonce=staticpod-roundtrip-20260826`, a separate static pod mounted host `/dev` and repeatedly read that exact value through `/dev/incus/sock`.
+4. Forced workload recovery passes. SIGKILL of the wrapper host PID replaced agent container `9248e917697c` with `9abbfe6f4ca9`; the replacement restaged `/dev/sr0`, restarted the host agent, and the consumer continued receiving the nonce.
+5. Per-node image update passes without reboot or a manual kubelet restart. A `talosctl patch machineconfig --mode no-reboot` change from immutable image A (`sha256:87bfbd9f…`) to image B (`sha256:7ae9b740…`) updated the `StaticPod` resource, replaced the agent container with `e133ef0fe0ae`, and preserved nonce responses.
+6. API-independent observability passes. SIGSTOP paused the kube-apiserver host process; authenticated `kubectl` failed with `context deadline exceeded`, while `talosctl containers --kubernetes` still listed both static pods and `talosctl logs --kubernetes` still returned agent and live nonce output. SIGCONT restored `/readyz` to `ok`.
+7. The consumer-starts-first race passes. With agent media detached, a fresh consumer container `18b938c64df4` logged connection failures. Reattaching `agent:config` caused the already-running wrapper to stage media and start the agent; the same consumer transitioned to successful nonce responses on its next retry without restart.
+
+Decision: the privileged static-pod execution model resolves the release-blocking AF_VSOCK issue and passes every authorized live acceptance condition. It should replace the extension service as the production architecture candidate. The spike does not establish least privilege: production work still must minimize the pod's privileges and host mounts without breaking AF_VSOCK or `/dev/incus/sock`, define per-node image rollout and rollback, and preserve Talos-native observability. Do not edit the stored architecture or implementation plan until the user authorizes that now-evidence-backed revision.
+
+Teardown complete: deleted `talos-agent-staticpod-spike`, removed generated remote/local Talos assets, kubeconfig, signing keys, apk repositories, compiled binaries, and local OCI archives. The pushed `spike/static-pod` branch and 24-hour OCI references remain as durable and short-lived evidence respectively.
