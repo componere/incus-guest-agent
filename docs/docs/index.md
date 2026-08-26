@@ -1,16 +1,20 @@
 ---
-title: template-go Docs
+title: incus-guest-agent
 slug: /
-description: Starting point for Meigma Go projects.
+description: Operate the Incus guest agent in Talos virtual machines.
 ---
 
-# template-go Docs
+# incus-guest-agent
 
-This repository is the starting point for Meigma Go projects.
+`incus-guest-agent` stages and supervises the host-supplied Incus guest agent
+inside a privileged Talos static pod.
 
-Generated projects should replace this page with project-specific documentation after bootstrapping:
+Use these documents to operate it:
 
-- project summary
-- quick start
-- operating notes
-- support and security paths
+- [Install on Talos under Incus](how-to/install.md)
+- [Update and roll back](how-to/update-rollback.md)
+- [Runtime and operations reference](reference/runtime.md)
+- [Why the static pod is privileged](explanation/privileged-static-pod.md)
+
+Deploy only the canonical `machine.pods` manifest with an immutable OCI digest.
+
