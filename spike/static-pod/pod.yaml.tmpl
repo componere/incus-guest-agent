@@ -1,0 +1,25 @@
+machine:
+  pods:
+    - apiVersion: v1
+      kind: Pod
+      metadata:
+        name: incus-guest-agent
+        namespace: kube-system
+      spec:
+        restartPolicy: Always
+        containers:
+          - name: agent
+            image: {{ .IMAGE }}
+            imagePullPolicy: IfNotPresent
+            securityContext:
+              privileged: true
+              runAsUser: 0
+              runAsGroup: 0
+            volumeMounts:
+              - name: dev
+                mountPath: /dev
+        volumes:
+          - name: dev
+            hostPath:
+              path: /dev
+              type: Directory
