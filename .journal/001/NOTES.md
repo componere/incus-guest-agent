@@ -15,3 +15,15 @@ Talos qemu-guest-agent lives in siderolabs/extensions (guest-agents/qemu-guest-a
 no standalone siderolabs repo exists. Shallow-cloned the extensions repo to ref/extensions
 and added ref/ to .gitignore. Note: the Talos extension packages upstream QEMU C qemu-ga
 (pkg.yaml builds from qemu source) rather than a Go implementation.
+
+## 2026-08-25 22:47 — Repo mission captured
+Goal: build a Talos system extension that runs the Incus guest agent inside Talos VMs
+on Incus, so incus-spire-attestor (~/code/componere/incus-spire-attestor) can attest the
+node: its agent-side NodeAttestor plugin reads claims via /dev/incus/sock, which only
+exists in a VM when incus-agent runs in the guest.
+References cloned to ref/: siderolabs/extensions (extension packaging pattern —
+guest-agents/qemu-guest-agent: pkg.yaml + manifest.yaml.tmpl + service spec yaml under
+/usr/local/etc/containers/) and lxc/incus (cmd/incus-agent source).
+Key wrinkle: stock incus-agent expects the host-provided config drive (9p/virtiofs
+"config" share) in its CWD: agent.crt/agent.key/server.crt for vsock TLS and
+agent-mounts.json. Extension service must mount that share before the agent starts.
