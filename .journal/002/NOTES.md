@@ -132,3 +132,24 @@ tests, and documentation). Remaining `meigma` strings identify the shared
 release workflow and release app, not template product identity. Next: push
 `feat/static-pod-runtime`, open the implementation pull request, and monitor its
 required checks.
+
+## 2026-08-26 16:55 — Pull request CI corrected
+
+Opened implementation PR #7. Its Ubuntu CI exposed Linux-only linter findings
+that Darwin validation could not load because `internal/linux/process.go` is
+build-tagged. Corrected the test lint findings, split the supervisor wait loop
+into equivalent state-transition helpers, and documented why `exec.Command`
+must not use `CommandContext`: the supervisor, not the standard library, must
+own graceful process-group cancellation.
+
+The focused review found and corrected one refactor regression before push:
+a failed SIGTERM must terminate `Process.Run`, not leave it waiting with no
+grace deadline. Verification then passed golangci-lint v2.12.2 in Linux,
+the process-supervision tests in both Linux amd64 and Linux arm64 containers,
+and the normal repository checks.
+
+GitHub did not attach new check suites to PR #7 after its corrected head was
+pushed, including after close/reopen attempts. Closed it as superseded and
+opened PR #8 at the corrected branch head. The PR remains the implementation
+handoff; all code, reviewer, local Linux, release, and live Talos evidence is
+complete.
