@@ -68,3 +68,10 @@ Verified: 4 phases mirror architecture §7 delivery order; builder selection and
 open points are represented as decision gates (PLAN.md §2) rather than silently resolved;
 final package/payload boundaries restated verbatim; per-phase gates, risks, acceptance
 criteria, and file-level targets included. Doc: .journal/001/PLAN.md.
+
+## 2026-08-26 10:30 — Close
+Session closed. PR #6 (.gitignore ref/) squash-merged; local master fast-forwarded to
+459d929; chore/ignore-ref worktree removed. Handoff: implementation has not started;
+next session begins at .journal/001/PLAN.md Phase 1 (vertical spike) with
+.journal/001/ARCHITECTURE.md as design authority. SUMMARY.md written; INDEX.md set to
+complete; TECH_NOTES.md updated with durable Talos/Incus facts.
