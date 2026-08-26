@@ -98,7 +98,7 @@ func (p *Process) Run(ctx context.Context) error {
 		return fmt.Errorf("enable child subreaper: %w", err)
 	}
 
-	//nolint:gosec,noctx // Binary is explicit; Run owns graceful process-group cancellation.
+	//nolint:gosec,noctx // Binary is explicit; CommandContext would bypass supervised group shutdown.
 	command := exec.Command(p.Binary)
 	command.Dir = p.Dir
 	command.Stdin = p.Stdin
