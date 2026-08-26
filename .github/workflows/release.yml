@@ -72,6 +72,6 @@ jobs:
       require-oci-image: true
       oci-image-reference: ${{ needs.oci-publish.outputs.image-reference }}
       release-app-client-id: ${{ vars.COMPONERE_RELEASE_APP_CLIENT_ID }}
-      publish-release: false
+      publish-release: true
     secrets:
       release-app-private-key: ${{ secrets.COMPONERE_RELEASE_APP_PRIVATE_KEY }}
