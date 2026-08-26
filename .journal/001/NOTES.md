@@ -49,3 +49,15 @@ execs the shipped incus-agent; service spec mounts /dev + /run, restart always.
 Built static agent from ref/incus with `-tags agent,netgo` as fallback (works, unneeded).
 Teardown done: VM deleted, pod gone with it, http server killed. sandbox01 /tmp/talos-spike
 retains iso/talosctl/kubectl for the next iteration.
+
+## 2026-08-26 09:35 — Architecture proposal drafted and complexity-reviewed
+Fed spike results + repo constraints to a software-architect agent; passed its proposal
+through an adversarial complexity review. Applied all 8 findings: dropped the custom Go
+OCI assembler (prefer pinned Sidero bldr, crane/regctl fallback); collapsed to 2 packages
+(internal/agent core + internal/linux adapters) and 4 ports (DeviceFinder, StageManager,
+AgentProcess, Waiter); staging copies exactly the 5 verified files (no generic tree
+copier); cleanup/error policy reduced to state restoration; behavioral T2 matrix instead
+of mock choreography; single-purpose release gates; no config/CLI framework; delivery
+reordered to prove the two release blockers first (machined mount propagation, extension
+artifact through the existing publisher).
+Final doc: .journal/001/ARCHITECTURE.md — awaiting user review.
