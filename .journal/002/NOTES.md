@@ -89,3 +89,46 @@ Implemented and pushed Phase 1 on `feat/static-pod-runtime` at commit `7fc194c`.
 Validation passed: deterministic mock regeneration; `go vet ./...`; configured `golangci-lint`; `moon run root:check --summary minimal` including docs; linux/arm64 race tests for command, core, and Linux adapters; static linux/amd64 and linux/arm64 cross-builds; CLI `--version` and unknown-argument exit behavior. The persistent reviewer approved the final Phase 1 tree with no blocking defects after its findings were corrected.
 
 Local image proof built signed Melange packages for x86_64 and aarch64 and one apko archive whose OCI index contained exactly `linux/amd64` and `linux/arm64`. Both platform entrypoints returned `incus-guest-agent dev`; both filesystems contained `/usr/bin/incus-guest-agent` and no shell, package manager, or template binary. Generated keys, archives, packages, staging directories, and SBOM files were removed after inspection; the worktree was clean when pushed.
+
+## 2026-08-26 16:35 — Release, live deployment, and documentation accepted
+
+Completed Phases 2 and 3 in `feat/static-pod-runtime`. GoReleaser now emits
+only static Linux amd64/arm64 archives and checksums. The reusable release
+workflow receives the canonical Melange, apko, and Talos deployment inputs.
+Security scanning builds the real Melange/apko image before scanning it.
+Production publish switches were restored after rehearsal.
+
+Two disposable tag-triggered GitHub release rehearsals exercised complementary
+paths. The first deliberately exposed the GHCR package visibility prerequisite;
+the second completed the full production image path. Published bytes proved an
+OCI index with exactly `linux/amd64` and `linux/arm64`, nonroot user `65532`,
+entrypoint `/usr/bin/incus-guest-agent`, the renamed binary, and no shell,
+package manager, or template binary. GoReleaser snapshot and the no-publish
+release path also passed.
+
+Created a fresh Talos 1.13.9 VM on Incus 7.3 and deployed the production
+digest-pinned `machine.pods` manifest. The live matrix passed cold boot, hot
+media attachment, host guest-info reporting, nonce round trips through a
+consumer, forced wrapper recovery, machine-config image update, Kubernetes API
+outage, media removal and reattachment, Talos reboot persistence, and immutable
+digest rollback. Reducing `/dev`, host networking, or the privileged profile
+failed separately; the checked-in profile remains the tested minimum.
+
+Added operator install, update/rollback, runtime-reference, and privilege
+explanation pages; replaced template README, security, and contribution text;
+removed the template deletion marker. The install and release runbooks now make
+public anonymous GHCR access a prerequisite because the proven pod has no
+`imagePullSecrets`. After the first real publication recreates the package,
+maintainers must link it to the repository, make it public, and prove anonymous
+digest resolution.
+
+Cleanup completed: disposable GitHub releases and tags are absent, the GHCR
+package returns 404, the proof VM is absent, and its remote credentials and
+local proof outputs were removed. The persistent reviewer issued a final
+all-phases APPROVE. Final verification passed deterministic Mockery generation,
+the repository-settings Python tests, and
+`mise exec -- moon run root:check --summary minimal` (format, lint, build, unit
+tests, and documentation). Remaining `meigma` strings identify the shared
+release workflow and release app, not template product identity. Next: push
+`feat/static-pod-runtime`, open the implementation pull request, and monitor its
+required checks.
