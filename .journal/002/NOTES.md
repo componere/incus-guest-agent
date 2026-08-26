@@ -44,3 +44,19 @@ Live results:
 Decision: the bldr and wrapper mechanics are viable, but the current extension-service architecture is blocked by Talos' seccomp filter on `AF_VSOCK`. Do not proceed to production implementation or revise the stored architecture/plan until choosing and proving an execution model that permits the host-supplied agent's vsock listener.
 
 Teardown complete: deleted `talos-agent-wrapper-spike`, removed its generated remote/local media and installer artifacts, and removed the temporary buildx builder. The pushed `spike/runtime` branch and 24-hour OCI references remain as the durable and short-lived evidence respectively.
+
+## 2026-08-26 12:33 — Static pod alternative is source-valid but unproven
+Reviewed the proposed `machine.pods` alternative against Talos v1.13.9, its pinned containerd fork, Kubernetes static-pod documentation, the current image configuration, and session 001 evidence.
+
+Confirmed: Talos converts `machine.pods` entries into `StaticPod` resources, serves the complete pod list on loopback HTTP through kubelet's `staticPodURL`, accepts updates without reboot, and exposes runtime state through `staticpodstatus` and the Kubernetes container namespace. Static pods bypass API-server admission. Talos extension services always receive containerd's default seccomp profile unless an internal runner override is supplied; the extension-service schema exposes no override. That profile explicitly excludes `AF_VSOCK`. The CRI path returns no seccomp spec option for a privileged container before considering Talos's `RuntimeDefault` setting, so a privileged static-pod workload container should avoid the observed EPERM.
+
+Corrections and gaps before approval:
+
+1. Source analysis makes the design plausible, not proven. Build a runnable OCI image and repeat the real-agent nonce round trip as a static pod before revising the architecture.
+2. The sample manifest inherits the image user. The current `apko.yaml` sets UID/GID 65532, while session 001 proved a root privileged pod. Set `runAsUser: 0` for an equivalent spike or explicitly prove the nonroot all-capabilities case.
+3. PodSecurity does not gate execution, but a privileged mirror pod in the default namespace may be rejected by API admission. Use `kube-system` if mirror-pod observability is required, or document that Talos-native status/log commands are authoritative.
+4. Calling the privilege delta cosmetic is inaccurate. The static-pod workload intentionally removes seccomp and `no_new_privileges`; the extension service retains those controls and a read-only rootfs by default, although it already receives all capabilities, all devices, and host network/IPC namespaces.
+5. Hot updates are per-node Talos machine-config operations, not a Kubernetes rollout. Production instructions must cover applying and rolling back the config on every target node and use an immutable image digest.
+6. A true scratch image and the current melange/apko Wolfi image are different packaging choices. Choose one. Reusing the current pipeline also requires changing its nonroot runtime account or overriding it in the pod.
+
+Decision: approve a disposable static-pod spike, not the architecture revision yet. Acceptance is the same real-agent chain as session 001 plus cold boot, hot media add, forced container restart, machine-config image update, and no-API-server observability.
