@@ -27,3 +27,25 @@ guest-agents/qemu-guest-agent: pkg.yaml + manifest.yaml.tmpl + service spec yaml
 Key wrinkle: stock incus-agent expects the host-provided config drive (9p/virtiofs
 "config" share) in its CWD: agent.crt/agent.key/server.crt for vsock TLS and
 agent-mounts.json. Extension service must mount that share before the agent starts.
+
+## 2026-08-25 23:05 — Spike complete: incus-agent runs on Talos, all checks green
+Ran on sandbox01 (lab2 spike host, Zabbly Incus 7.3). Talos v1.13.9 VM, single-node
+cluster, privileged pod in kube-system simulating the extension container.
+Findings:
+1. Talos kernel: CONFIG_NET_9P unset (9p path dead); ISO9660_FS=y builtin;
+   virtio_vsock=m autoloads (/dev/vsock present). virtiofs=m untested.
+2. VM needs `incus config device add <vm> agent disk source=agent:config` -> appears
+   as /dev/sr0 (iso9660). No /dev/disk/by-label symlink on Talos; find by mount+probe.
+3. The cdrom ships a matching static incus-agent binary PLUS agent.conf, agent.crt,
+   agent.key, server.crt. Extension need not bundle the agent binary.
+4. Replaying incus-agent-setup by hand works: tmpfs at /run/incus_agent, cp cdrom
+   contents, cd, exec ./incus-agent. Result: /dev/incus/sock served; devincus API OK;
+   host-side incus info/file/exec OK; nonce channel verified (host set user.spike-nonce,
+   guest read it via /1.0/config/user.spike-nonce).
+5. Cosmetic: agent reports the container mount-ns OS (Alpine) to incus info.
+6. PodSecurity baseline blocks privileged pods in default ns; used kube-system (spike-only).
+Decision: extension = tiny Go wrapper that mounts the agent:config cdrom, stages tmpfs,
+execs the shipped incus-agent; service spec mounts /dev + /run, restart always.
+Built static agent from ref/incus with `-tags agent,netgo` as fallback (works, unneeded).
+Teardown done: VM deleted, pod gone with it, http server killed. sandbox01 /tmp/talos-spike
+retains iso/talosctl/kubectl for the next iteration.
