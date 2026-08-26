@@ -1,8 +1,9 @@
 package:
-  name: template-go
+  name: incus-guest-agent
   version: ${{vars.version}}
   epoch: 0
-  description: Meigma Go repository template application.
+  description: Incus guest agent supervisor for Talos static pods.
+  url: https://github.com/componere/incus-guest-agent
   target-architecture:
     - x86_64
     - aarch64
@@ -23,4 +24,4 @@ environment:
 
 pipeline:
   - runs: |
-      install -Dm755 -o 0 -g 0 application "${{targets.destdir}}/usr/bin/template-go"
+      install -Dm755 -o 0 -g 0 application "${{targets.destdir}}/usr/bin/incus-guest-agent"
