@@ -153,3 +153,10 @@ pushed, including after close/reopen attempts. Closed it as superseded and
 opened PR #8 at the corrected branch head. The PR remains the implementation
 handoff; all code, reviewer, local Linux, release, and live Talos evidence is
 complete.
+
+## 2026-08-26 17:13 — Implementation merged
+
+PR #8 passed its final `ci` and GitHub Pages checks and was squash-merged into
+`master` as `b6e0c278967f8209d136a55dce816b58ee90ddf8`. The implementation plan is
+complete. The feature worktree remains available until an explicit session
+close or cleanup request.
