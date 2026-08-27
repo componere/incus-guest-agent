@@ -99,3 +99,18 @@ go-pre-publish, GitHub OIDC issuer) = Verified OK; amd64 tarball checksum
 matches. Conclusion: release chain is sound; the gh failure is a local CLI/
 trust-root issue, worth retrying from another gh build before suspecting the
 pipeline.
+
+## 2026-08-26 20:05 — gh attestation verify root cause
+Not a local/gh-build issue (mise-provided gh 2.98.0 failed identically; TUF
+cache clear and clock ruled out). Root cause: the SLSA provenance certs are
+signed with the REUSABLE WORKFLOW identity (SAN =
+meigma/release/.github/workflows/publish-github-release.yml@0dee66f for
+release assets; sourceRepositoryURI = componere/incus-guest-agent), and gh's
+default policy requires the signer to live in --repo. Fix: pass
+`--signer-repo meigma/release`. Both the amd64 tarball and the OCI index
+digest then verify (exit 0, public-good sigstore). Bonus finding: each digest
+carries a second attestation signed by GitHub's own Fulcio (SAN
+dotcom.releases.github.com, predicate in-toto release/v0.2) — GitHub's
+immutable-release attestation. Verification command worth documenting:
+  gh attestation verify <artifact|oci://ref@digest> \
+    --repo componere/incus-guest-agent --signer-repo meigma/release
