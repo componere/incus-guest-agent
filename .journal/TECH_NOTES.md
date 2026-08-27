@@ -20,8 +20,13 @@
   group, reaps descendants, and owns graceful shutdown with SIGKILL escalation.
 - Deploy per node through Talos machine configuration with immutable image
   digests. Talos container and log APIs remain available without kube-apiserver.
-  After the first real GHCR publication, link the package to the repository,
-  make it public, and prove anonymous digest resolution.
+- v0.1.0 is released. Image: `ghcr.io/componere/incus-guest-agent` (public,
+  auto-linked to the repo, amd64+arm64). Releases flow through the pinned
+  `meigma/release` reusable workflows on `v*` tags; release-please opens the
+  release PR (`initial-version` 0.1.0, pre-major bump flags set).
+- `gh attestation verify` on release artifacts requires
+  `--signer-repo meigma/release` because provenance carries the reusable
+  workflow identity; commands are documented in `SECURITY.md`.
 - Live test host: `sandbox01` (Ubuntu, Zabbly Incus; see `~/code/lab2/sandbox`).
 - Reference clones live in gitignored ref/ (siderolabs/extensions, lxc/incus);
   re-clone if missing.

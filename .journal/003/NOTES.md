@@ -122,3 +122,15 @@ release assets, plus the cosign verify-blob path for checksums.txt (confirmed
 the deprecated --new-bundle-format flag is unnecessary with the pinned cosign).
 All three commands were run against the live v0.1.0 artifacts before
 documenting.
+
+## 2026-08-26 20:30 — Close
+Session closed. All work merged: PR #12 (docs pass + README restructure),
+Dependabot #1-#5, PR #13 (pymdown-extensions 11.0.2, both alerts fixed),
+PR #14 (initial-version 0.1.0), PR #9 (release 0.1.0), PR #15 (SECURITY.md
+verification docs). v0.1.0 live: release published with signed checksums,
+SBOMs, and provenance; image ghcr.io/componere/incus-guest-agent:0.1.0
+public and verified (anonymous pull, --version, cosign, gh attestation with
+--signer-repo meigma/release). Handoff: next engineering work is the
+remaining plan phases per .journal/002/PLAN.md; meigma/release pin is 4
+commits behind upstream (non-urgent). SUMMARY.md written; INDEX.md and
+TECH_NOTES.md updated.
