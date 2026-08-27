@@ -114,3 +114,11 @@ dotcom.releases.github.com, predicate in-toto release/v0.2) — GitHub's
 immutable-release attestation. Verification command worth documenting:
   gh attestation verify <artifact|oci://ref@digest> \
     --repo componere/incus-guest-agent --signer-repo meigma/release
+
+## 2026-08-26 20:15 — Verification docs shipped
+Added "Verifying release artifacts" to SECURITY.md (PR #15, squash-merged):
+gh attestation verify with --signer-repo meigma/release for the OCI image and
+release assets, plus the cosign verify-blob path for checksums.txt (confirmed
+the deprecated --new-bundle-format flag is unnecessary with the pinned cosign).
+All three commands were run against the live v0.1.0 artifacts before
+documenting.
