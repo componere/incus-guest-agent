@@ -40,3 +40,14 @@ the deployed site). Pushed de25a79 to docs/style-pass; PR #12 body updated.
 Squash-merged as dc61cc1 (docs: tighten operator docs for accuracy and style).
 Master fast-forwarded, docs/style-pass worktree and branch removed. GitHub
 Pages will republish from master. Docs pass complete.
+
+## 2026-08-26 18:25 — Dependabot triage complete
+Merged all 5 open Dependabot PRs (#1-#5: actions/cache 6.1.0, mkdocs-material
+9.7.7, codeql upload-sarif 4.37.8, mise-action 4.2.5, actions/checkout 7.0.1);
+all SHA-pinned with version comments, all CI green. The two security alerts
+(pymdown-extensions: GHSA-gm37-52c6-37mw high ReDoS, GHSA-9xwg-3r6f-jcx2
+moderate b64 path traversal) were NOT covered by any PR — transitive dep of
+mkdocs-material in docs/uv.lock. Fixed via uv lock --upgrade-package
+pymdown-extensions (10.21.3 -> 11.0.2), strict docs build verified, PR #13
+squash-merged as d1def9b. Both alerts now show state=fixed. Remaining open PR
+is release-please 1.0.0 (#9) — intentionally left for the user.
