@@ -14,7 +14,7 @@ The wrapper must perform operations that ordinary containers cannot perform:
 - mount the Incus configuration medium as read-only `iso9660`;
 - mount a private tmpfs for the staged agent files;
 - execute the host-supplied `incus-agent` as root;
-- expose the host's AF_VSOCK device behavior to that agent; and
+- give that agent the AF_VSOCK transport it uses to reach the Incus host; and
 - preserve `/dev/incus/sock` access for node-local consumers.
 
 The host-supplied agent reports guest information to Incus and serves the guest configuration socket. Both paths must work before a security profile is accepted.

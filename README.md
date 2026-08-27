@@ -1,39 +1,50 @@
 # incus-guest-agent
 
 `incus-guest-agent` runs the host-supplied Incus guest agent inside Talos
-virtual machines. A privileged Talos static pod discovers the Incus
-configuration medium, copies its five required files into tmpfs, starts the
-agent, forwards shutdown signals, and reaps descendant processes.
+Linux virtual machines. Talos is immutable and cannot run the loader that
+normally installs the agent inside a guest, so without it `incus info`,
+`incus exec`, and node-local `/dev/incus/sock` consumers do not work. This
+project delivers the agent instead as a privileged Talos static pod that
+discovers the Incus configuration medium, stages its five files into tmpfs,
+and supervises the agent process.
 
 The supported deployment is a digest-pinned `machine.pods` entry. It runs on
 Linux `amd64` and `arm64`.
 
+## Getting started
+
+Attach the agent media on the Incus host:
+
+```sh
+incus config device add <instance> agent disk source=agent:config
+```
+
+Resolve a release to an immutable digest, render the static-pod patch from
+[`deploy/talos/incus-guest-agent.yaml.tmpl`](deploy/talos/incus-guest-agent.yaml.tmpl),
+and apply it to the Talos node without a reboot:
+
+```sh
+DIGEST="$(docker buildx imagetools inspect \
+  ghcr.io/componere/incus-guest-agent:<version> --format '{{.Manifest.Digest}}')"
+sed "s|sha256:<digest>|$DIGEST|" \
+  deploy/talos/incus-guest-agent.yaml.tmpl > incus-guest-agent.yaml
+
+talosctl --nodes <node> patch machineconfig --mode no-reboot \
+  --patch @incus-guest-agent.yaml
+```
+
+For prerequisites, node-by-node rollout, and the verification steps, follow
+[Install on Talos under Incus](https://componere.github.io/incus-guest-agent/how-to/install/).
+
 ## Documentation
 
-- [Install on Talos under Incus](docs/docs/how-to/install.md)
-- [Update and roll back](docs/docs/how-to/update-rollback.md)
-- [Runtime and operations reference](docs/docs/reference/runtime.md)
-- [Why the static pod is privileged](docs/docs/explanation/privileged-static-pod.md)
+The full documentation lives at
+[componere.github.io/incus-guest-agent](https://componere.github.io/incus-guest-agent/):
 
-The canonical patch template is
-[`deploy/talos/incus-guest-agent.yaml.tmpl`](deploy/talos/incus-guest-agent.yaml.tmpl).
-Resolve a stable release to an immutable OCI digest before applying it. The
-documented `machine.pods` static pod is the only supported deployment.
-
-
-## Runtime behavior
-
-The wrapper:
-
-1. checks `/dev/sr*` for valid Incus configuration media;
-2. validates `incus-agent`, `agent.conf`, `agent.crt`, `agent.key`, and
-   `server.crt`;
-3. stages the files under `/var/run/incus-guest-agent/agent`;
-4. starts exactly one host-supplied `incus-agent`; and
-5. restarts through kubelet if the supervised process exits unexpectedly.
-
-The pod remains observable through `talosctl containers --kubernetes` and
-`talosctl logs --kubernetes` when kube-apiserver is unavailable.
+- [Install on Talos under Incus](https://componere.github.io/incus-guest-agent/how-to/install/)
+- [Update and roll back](https://componere.github.io/incus-guest-agent/how-to/update-rollback/)
+- [Runtime and operations reference](https://componere.github.io/incus-guest-agent/reference/runtime/)
+- [Why the static pod is privileged](https://componere.github.io/incus-guest-agent/explanation/privileged-static-pod/)
 
 ## Development
 
@@ -44,13 +55,10 @@ The pod remains observable through `talosctl containers --kubernetes` and
 mise install
 ```
 
-Moon is the task entry point:
+Moon is the task entry point; `root:check` runs format, lint, build, test, and
+the docs build:
 
 ```sh
-moon run root:format
-moon run root:lint
-moon run root:build
-moon run root:test
 moon run root:check
 ```
 
@@ -59,6 +67,9 @@ Run the command directly:
 ```sh
 go run ./cmd/incus-guest-agent --version
 ```
+
+[CONTRIBUTING.md](CONTRIBUTING.md) lists the individual tasks and the
+architecture rules for changes.
 
 Build the host-architecture OCI image locally:
 
