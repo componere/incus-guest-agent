@@ -35,3 +35,8 @@ loader → incus info/exec and /dev/incus/sock need the static pod), adds a
 minimal attach/render/apply quickstart deferring to the install guide, and all
 doc links now target the live GitHub Pages site (URL scheme verified against
 the deployed site). Pushed de25a79 to docs/style-pass; PR #12 body updated.
+
+## 2026-08-26 18:07 — PR #12 merged
+Squash-merged as dc61cc1 (docs: tighten operator docs for accuracy and style).
+Master fast-forwarded, docs/style-pass worktree and branch removed. GitHub
+Pages will republish from master. Docs pass complete.
