@@ -18,22 +18,9 @@ Linux `amd64` and `arm64`.
 The canonical patch template is
 [`deploy/talos/incus-guest-agent.yaml.tmpl`](deploy/talos/incus-guest-agent.yaml.tmpl).
 Resolve a stable release to an immutable OCI digest before applying it. The
-documented `machine.pods` static pod is the only supported deployment.
-
-
-## Runtime behavior
-
-The wrapper:
-
-1. checks `/dev/sr*` for valid Incus configuration media;
-2. validates `incus-agent`, `agent.conf`, `agent.crt`, `agent.key`, and
-   `server.crt`;
-3. stages the files under `/var/run/incus-guest-agent/agent`;
-4. starts exactly one host-supplied `incus-agent`; and
-5. restarts through kubelet if the supervised process exits unexpectedly.
-
-The pod remains observable through `talosctl containers --kubernetes` and
-`talosctl logs --kubernetes` when kube-apiserver is unavailable.
+documented `machine.pods` static pod is the only supported deployment. Runtime
+paths, the startup sequence, and log messages are in the
+[runtime reference](docs/docs/reference/runtime.md).
 
 ## Development
 
@@ -44,13 +31,10 @@ The pod remains observable through `talosctl containers --kubernetes` and
 mise install
 ```
 
-Moon is the task entry point:
+Moon is the task entry point; `root:check` runs format, lint, build, test, and
+the docs build:
 
 ```sh
-moon run root:format
-moon run root:lint
-moon run root:build
-moon run root:test
 moon run root:check
 ```
 
@@ -59,6 +43,9 @@ Run the command directly:
 ```sh
 go run ./cmd/incus-guest-agent --version
 ```
+
+[CONTRIBUTING.md](CONTRIBUTING.md) lists the individual tasks and the
+architecture rules for changes.
 
 Build the host-architecture OCI image locally:
 

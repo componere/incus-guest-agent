@@ -76,7 +76,8 @@ If all checks pass, update the next node. Talos does not coordinate `machine.pod
 
 ## Roll back one node
 
-Apply the previous rendered patch with the same no-reboot operation:
+Apply the rendered patch that you recorded before the update, shown here as
+`incus-guest-agent-previous.yaml`, with the same no-reboot operation:
 
 ```sh
 talosctl --talosconfig "$TALOSCONFIG" --nodes "$NODE" \

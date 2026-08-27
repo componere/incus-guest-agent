@@ -75,7 +75,7 @@ On `SIGINT` or `SIGTERM`, it:
 3. sends `SIGKILL` if descendants remain; and
 4. waits another 2 seconds for the process tree to disappear.
 
-An unexpected agent exit makes the wrapper exit nonzero. `restartPolicy: Always` then lets kubelet replace the container, restage the media, and start a fresh agent.
+An unexpected agent exit makes the wrapper exit nonzero. With `restartPolicy: Always`, kubelet replaces the container; the new wrapper restages the media and starts a fresh agent.
 
 ## Command-line contract
 

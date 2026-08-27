@@ -17,16 +17,16 @@ You need:
 - a local checkout of this repository for the canonical patch template; and
 - public, anonymous read access to `ghcr.io/componere/incus-guest-agent`.
 
-The canonical patch has no `imagePullSecrets`. A private GHCR package is not
-supported by the proven profile. Before changing Talos, run the digest command
-below from a workstation that has no GHCR credentials configured. Success
-proves that the node can use the same anonymous registry path.
+The supported deployment is the `machine.pods` static pod in
+[`deploy/talos/incus-guest-agent.yaml.tmpl`](https://github.com/componere/incus-guest-agent/blob/master/deploy/talos/incus-guest-agent.yaml.tmpl).
+The production acceptance test used Incus 7.3 and Talos 1.13.9; other versions
+are untested.
 
-
-The production acceptance test used Incus 7.3 and Talos 1.13.9. Other versions have not passed this repository's live matrix.
-
-The supported deployment is the `machine.pods` static pod in [`deploy/talos/incus-guest-agent.yaml.tmpl`](https://github.com/componere/incus-guest-agent/blob/master/deploy/talos/incus-guest-agent.yaml.tmpl).
-
+The canonical patch has no `imagePullSecrets`, so the GHCR package must stay
+publicly readable. Before changing Talos, run the digest command below from a
+workstation that has no GHCR credentials configured. Success confirms the
+package resolves anonymously; the node still needs its own network access to
+`ghcr.io` when it pulls the image.
 
 ## Attach the Incus configuration media
 
@@ -91,7 +91,7 @@ talosctl --talosconfig "$TALOSCONFIG" --nodes "$NODE" \
   containers --kubernetes
 ```
 
-The output must contain a running `kube-system/incus-guest-agent-<node>:agent` container.
+The output must contain a running `kube-system/incus-guest-agent-<node name>:agent` container.
 
 Read the wrapper log without using the Kubernetes API. Set `NODE_NAME` to the Talos node name:
 
@@ -103,7 +103,7 @@ talosctl --talosconfig "$TALOSCONFIG" --nodes "$NODE" \
   "kube-system/incus-guest-agent-${NODE_NAME}:agent"
 ```
 
-A successful start contains these messages in order:
+A successful start logs these messages in order (the `device` value names the accepted optical device and can differ):
 
 ```text
 waiting for Incus configuration media
@@ -118,7 +118,7 @@ incus info "$INSTANCE"
 incus exec "$INSTANCE" -- /usr/bin/incus-guest-agent --version
 ```
 
-`incus info` must include live guest OS and address data. The version command must print the installed wrapper version.
+`incus info` must include live guest OS and address data. The version command must print `incus-guest-agent <version>` for the installed release.
 
 ## Verify a consumer of `/dev/incus/sock`
 
