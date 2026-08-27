@@ -87,3 +87,15 @@ repo (no manual visibility flip needed — pre-flight assumption of
 default-private did not hold for this publish path). Verified: anonymous
 manifest fetch HTTP 200, docker run --version prints 0.1.0, provenance
 attestation verifies via gh attestation verify.
+
+## 2026-08-26 19:35 — Attestation verification note
+Correction to the 19:20 entry: `gh attestation verify` (gh 2.97.0, nixpkgs)
+fails locally with a bare `Error: verifying with issuer "sigstore.dev"` for
+both the OCI image and release tarballs — no detail even with GH_DEBUG.
+GitHub's attestation API returns 1 attestation for the index digest, and
+independent verification succeeds: cosign verify-blob of checksums.txt
+against checksums.txt.sigstore.json (Fulcio identity meigma/release
+go-pre-publish, GitHub OIDC issuer) = Verified OK; amd64 tarball checksum
+matches. Conclusion: release chain is sound; the gh failure is a local CLI/
+trust-root issue, worth retrying from another gh build before suspecting the
+pipeline.
