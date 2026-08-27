@@ -187,3 +187,17 @@ Enabling Dependabot alerts surfaced two open `pymdown-extensions` advisories in
 They are outside the repository-configuration request and remain for dependency
 remediation. The script also continues to report its documented unsupported
 manual settings.
+
+## 2026-08-26 17:37 — Close
+
+Session complete. PR #8 merged the production static-pod runtime into `master`
+as `b6e0c278967f8209d136a55dce816b58ee90ddf8`; PRs #10 and #11 merged the
+repository-manifest corrections. Local `master` is current and clean. Removed
+the three merged implementation worktrees and their remaining remote branches.
+Removed the two spike worktrees while retaining `spike/runtime` and
+`spike/static-pod` as read-only experimental evidence.
+
+`.journal/002/SUMMARY.md` records the final outcome. Release PR #9 remains open
+for a deliberate `1.0.0` publication. The first real GHCR package still needs
+repository linkage, public visibility, and an anonymous digest-pull check.
+Dependabot's high- and medium-severity `pymdown-extensions` findings remain open.
