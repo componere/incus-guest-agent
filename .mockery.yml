@@ -1,0 +1,18 @@
+# mockery v3.7.4 packages config. Generate with:
+#   go tool mockery
+# after the module records github.com/vektra/mockery/v3@v3.7.4 as a tool.
+template: testify
+formatter: goimports
+force-file-write: true
+packages:
+  github.com/componere/incus-guest-agent/internal/agent:
+    config:
+      dir: "{{.InterfaceDir}}/mocks"
+      filename: "{{.InterfaceName}}.go"
+      pkgname: mocks
+      structname: "Mock{{.InterfaceName}}"
+    interfaces:
+      AgentProcess:
+      DeviceFinder:
+      StageManager:
+      Waiter:

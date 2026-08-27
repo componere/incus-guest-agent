@@ -1,38 +1,50 @@
-# template-go
+# incus-guest-agent
 
-`template-go` is the reusable Go repository starter for Meigma projects.
-It includes a small Go CLI skeleton, Moon tasks, pinned CI, Dependabot, baseline repository security settings, and Release Please plus the reusable `meigma/release` release unit.
+`incus-guest-agent` runs the host-supplied Incus guest agent inside Talos
+virtual machines. A privileged Talos static pod discovers the Incus
+configuration medium, copies its five required files into tmpfs, starts the
+agent, forwards shutdown signals, and reaps descendant processes.
 
-## Local Bootstrap
+The supported deployment is a digest-pinned `machine.pods` entry. It runs on
+Linux `amd64` and `arm64`.
 
-Prerequisites:
+## Documentation
 
-- [mise](https://mise.jdx.dev) — provisions every pinned tool from `mise.toml` +
-  `mise.lock`: Go, Moon, Python + uv, `golangci-lint`, GoReleaser, GitHub CLI,
-  Syft, Cosign, Melange, and apko. Run `mise install` once; there is nothing
-  else to install by hand.
+- [Install on Talos under Incus](docs/docs/how-to/install.md)
+- [Update and roll back](docs/docs/how-to/update-rollback.md)
+- [Runtime and operations reference](docs/docs/reference/runtime.md)
+- [Why the static pod is privileged](docs/docs/explanation/privileged-static-pod.md)
 
-Tool versions live in `mise.toml`; `mise.lock` records a per-platform download URL
-and checksum for each (and, for the aqua-backed CLIs, cosign/SLSA/GitHub-attestation
-verification). `mise install` runs with `locked = true`, so it **fails closed** if a
-tool lacks a pre-resolved, checksummed entry for the current platform. Moon runs every
-task against these tools as `system` binaries on PATH and manages no toolchain itself.
-To bump a tool, edit its version in `mise.toml`, run
-`mise lock --platform linux-x64,linux-arm64,macos-x64,macos-arm64`, and commit
-`mise.toml` + `mise.lock`.
+The canonical patch template is
+[`deploy/talos/incus-guest-agent.yaml.tmpl`](deploy/talos/incus-guest-agent.yaml.tmpl).
+Resolve a stable release to an immutable OCI digest before applying it. The
+documented `machine.pods` static pod is the only supported deployment.
 
-After creating a new repository from this template, replace the placeholder names before doing feature work:
+
+## Runtime behavior
+
+The wrapper:
+
+1. checks `/dev/sr*` for valid Incus configuration media;
+2. validates `incus-agent`, `agent.conf`, `agent.crt`, `agent.key`, and
+   `server.crt`;
+3. stages the files under `/var/run/incus-guest-agent/agent`;
+4. starts exactly one host-supplied `incus-agent`; and
+5. restarts through kubelet if the supervised process exits unexpectedly.
+
+The pod remains observable through `talosctl containers --kubernetes` and
+`talosctl logs --kubernetes` when kube-apiserver is unavailable.
+
+## Development
+
+[mise](https://mise.jdx.dev) installs the toolchain pinned in `mise.toml` and
+`mise.lock`:
 
 ```sh
-go mod edit -module github.com/meigma/YOUR_REPO
-mv cmd/template-go cmd/YOUR_BINARY
+mise install
 ```
 
-Then update `template-go` references in the Moon tasks, GoReleaser, Melange and apko configurations, README, and package docs.
-
-## Common Tasks
-
-Moon is the standard task front door:
+Moon is the task entry point:
 
 ```sh
 moon run root:format
@@ -42,87 +54,28 @@ moon run root:test
 moon run root:check
 ```
 
-CI runs the same aggregate check:
+Run the command directly:
 
 ```sh
-moon ci --summary minimal
+go run ./cmd/incus-guest-agent --version
 ```
 
-The starter CLI is intentionally small:
-
-```sh
-go run ./cmd/template-go --version
-go run ./cmd/template-go --message "hello from cobra"
-go test ./...
-```
-
-The CLI entrypoint uses Cobra and Viper in the same shape as other Meigma CLIs: `cmd/template-go` stays thin, `internal/cli` owns command construction, and Viper-backed flags can also be supplied through `TEMPLATE_GO_*` environment variables.
-
-## Container Image
-
-The image is built without a Dockerfile. GoReleaser produces the canonical Linux
-binaries. [Melange](https://github.com/chainguard-dev/melange) packages those
-exact bytes into signed [Wolfi](https://github.com/wolfi-dev) APKs, and
-[apko](https://github.com/chainguard-dev/apko) assembles a minimal,
-multi-architecture, nonroot image. The runtime uses UID/GID 65532 and includes
-CA certificates and timezone data.
-
-Build and run a host-architecture image locally with Docker:
+Build the host-architecture OCI image locally:
 
 ```sh
 mise run image-local
-docker run --rm template-go:dev --version
-docker run --rm template-go:dev --message "hello from container"
+docker run --rm incus-guest-agent:dev --version
 ```
 
-The Wolfi base resolves current packages during each build. The generated SBOM
-and provenance record the resolved contents. GoReleaser stamps `version`,
-`commit`, and `date` into the release binary; `mise run image-local` uses
-development values.
-
-## CI and Security
-
-The default CI workflow keeps permissions minimal, pins external actions, disables checkout credential persistence, and delegates checks to Moon.
-It uses GitHub-hosted dependency caches for Go, golangci-lint, and uv download artifacts while leaving Moon remote caching as an optional follow-up for repositories that need a shared task-output cache.
-The docs workflow builds the MkDocs site on pull requests and deploys `docs/build` to GitHub Pages from the default branch.
-The scheduled security scan workflow builds the local container image weekly, scans it for high/critical fixed vulnerabilities, and uploads SARIF results to GitHub code scanning.
-Dependabot covers GitHub Actions, the root Go module, and the docs uv project.
-
-Repository settings live in `.github/repository-settings.toml`.
-They default to immutable releases, private vulnerability reporting, signed commits, squash-only merges, GitHub Pages workflow publishing, and protected tags.
-
-## Release Layer
-
-Release automation is enabled for the template application so the template
-proves the binary and OCI paths before generated projects inherit them.
-
-The release path is:
-
-- Release Please maintains the release PR and creates a stable `vMAJOR.MINOR.PATCH`
-  tag plus a draft GitHub Release after merge.
-- `.github/workflows/release.yml` calls one immutable
-  [`meigma/release`](https://github.com/meigma/release) release unit pinned by
-  full commit SHA.
-- The release unit builds and verifies archives, native packages, checksums,
-  SBOMs, and the checksum Sigstore bundle.
-- The same canonical Linux binaries become a signed, attested
-  `ghcr.io/meigma/template-go` image for `amd64` and `arm64`.
-- The release unit uploads the verified assets and publishes the GitHub Release
-  only after the OCI path succeeds.
-
-Generated repositories must update names and metadata, pin one reviewed
-`meigma/release` revision across every workflow and signer reference, and
-rehearse with both publication inputs disabled before their first public
-release. See [`DELETE_ME.md`](DELETE_ME.md) for the setup checklist.
+The release pipeline builds static Linux binaries, packages them into signed
+Wolfi APKs with Melange, and assembles the multi-architecture image with apko.
+Published release assets include checksums, SBOMs, signatures, and provenance.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines, local setup expectations, and pull request workflow.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Security
 
-See [SECURITY.md](SECURITY.md) for supported versions and the private vulnerability reporting path.
+See [SECURITY.md](SECURITY.md) for the private vulnerability reporting path.
 
-## License
-
-Add the repository license before publishing a project generated from this template.

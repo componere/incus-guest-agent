@@ -1,50 +1,60 @@
 # Contributing
 
-Thank you for your interest in contributing.
-This repository is a Go project template, so changes should keep the generated-project path simple and predictable.
-For private vulnerability reporting, use [SECURITY.md](SECURITY.md) instead of public channels.
+Use [SECURITY.md](SECURITY.md) for vulnerabilities. Report non-security bugs
+through GitHub issues.
 
-## Reporting Bugs
+## Pull requests
 
-Report non-security bugs through GitHub issues.
-Include the following details when possible:
+Keep each change focused on one problem. When behavior changes:
 
-- version, commit, or environment details
-- steps to reproduce
-- expected behavior
-- actual behavior
-- logs, screenshots, or a minimal reproduction
+1. add or update tests for the observable contract;
+2. update operator documentation;
+3. use a Conventional Commit subject; and
+4. run `moon run root:check` before requesting review.
 
-If you are reporting a security issue, stop and follow [SECURITY.md](SECURITY.md) instead.
+The architecture keeps orchestration in `internal/agent` and Linux I/O in
+`internal/linux`. Put new side effects behind consumer-owned ports and generate
+adapter mocks with Mockery; do not write mocks by hand.
 
-## Pull Requests
+## Local setup
 
-Contributors should:
-
-1. Keep changes focused and scoped to a single problem.
-2. Add or update tests when behavior changes.
-3. Update documentation when user-facing behavior changes.
-4. Use Conventional Commit subjects, such as `feat: add config loader` or `fix: handle empty input`.
-5. Make sure `moon run root:check` passes before requesting review.
-
-## Local Setup
+Install the toolchain pinned by mise:
 
 ```sh
-mise install         # provision the pinned toolchain (Go, Moon, the dev CLIs)
-moon run root:check
+mise install
 ```
 
-Useful project commands:
+Run the standard checks:
 
 ```sh
 moon run root:format
 moon run root:lint
 moon run root:build
 moon run root:test
-go run ./cmd/template-go --version
+moon run root:check
 ```
 
-## Release Changes
+Run the command directly:
 
-Release Please reads Conventional Commit subjects to build changelogs and release PRs.
-Keep release-impacting commits clear; routine docs, CI, and maintenance commits should use the appropriate non-release type.
+```sh
+go run ./cmd/incus-guest-agent --version
+```
+
+## Release changes
+
+Release Please derives release notes and version changes from Conventional
+Commit subjects. Do not create release tags manually or enable a publisher to
+work around a failed validation gate.
+
+The canonical Talos patch pulls the GHCR image anonymously and has no
+`imagePullSecrets`. After the first image publication creates the package:
+
+1. link `ghcr.io/componere/incus-guest-agent` to this repository in the package
+   settings;
+2. set package visibility to public; and
+3. run `docker buildx imagetools inspect` from an environment with no GHCR
+   credentials to prove anonymous digest resolution.
+
+A private package will leave Talos nodes in an image-pull failure. Supporting a
+private registry requires a separately reviewed and live-tested pod profile.
+

@@ -49,22 +49,22 @@ jobs:
           mkdir -p scan-input
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath \
             -ldflags="-s -w -buildid= -X main.version=$VERSION -X main.commit=$COMMIT -X main.date=$DATE" \
-            -o scan-input/application ./cmd/template-go
+            -o scan-input/application ./cmd/incus-guest-agent
           printf '{"version":"0.0.0"}\n' > melange-vars.json
           melange keygen melange.rsa
           melange build melange.yaml --arch x86_64 --runner docker \
             --signing-key melange.rsa --source-dir scan-input --out-dir packages \
             --vars-file melange-vars.json
-          apko build apko.yaml template-go:security-scan scan.tar \
+          apko build apko.yaml incus-guest-agent:security-scan scan.tar \
             --arch amd64 --repository-append ./packages --keyring-append ./melange.rsa.pub
           docker load < scan.tar
-          docker tag template-go:security-scan-amd64 template-go:security-scan
+          docker tag incus-guest-agent:security-scan-amd64 incus-guest-agent:security-scan
 
       - name: Scan local image
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: image
-          image-ref: template-go:security-scan
+          image-ref: incus-guest-agent:security-scan
           scanners: vuln
           vuln-type: os,library
           severity: HIGH,CRITICAL

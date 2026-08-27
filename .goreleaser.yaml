@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 version: 2
 
-project_name: template-go
+project_name: incus-guest-agent
 
 gomod:
   proxy: true
@@ -10,16 +10,18 @@ gomod:
     - GOPROXY=https://proxy.golang.org,direct
     - GOSUMDB=sum.golang.org
 
+# The reusable release unit runs `goreleaser release --clean --skip=publish`
+# and then selects exactly one linux/amd64 and one linux/arm64 binary from
+# dist/artifacts.json; those two binaries are the canonical bytes Melange
+# packages and apko composes. Any other platform would be an unused artifact.
 builds:
-  - id: template-go
-    main: ./cmd/template-go
-    binary: template-go
+  - id: incus-guest-agent
+    main: ./cmd/incus-guest-agent
+    binary: incus-guest-agent
     env:
       - CGO_ENABLED=0
     goos:
-      - darwin
       - linux
-      - windows
     goarch:
       - amd64
       - arm64
@@ -32,84 +34,17 @@ builds:
       - -X main.date={{ .CommitDate }}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
-notarize:
-  macos:
-    - enabled: '{{ eq .Env.MACOS_NOTARIZE_ENABLED "true" }}'
-      ids:
-        - template-go
-      sign:
-        certificate: "{{ .Env.MACOS_SIGN_P12 }}"
-        password: "{{ .Env.MACOS_SIGN_PASSWORD }}"
-      notarize:
-        issuer_id: "{{ .Env.MACOS_NOTARY_ISSUER_ID }}"
-        key_id: "{{ .Env.MACOS_NOTARY_KEY_ID }}"
-        key: "{{ .Env.MACOS_NOTARY_KEY }}"
-        wait: true
-        timeout: 20m
-
 archives:
-  - id: template-go
+  - id: incus-guest-agent
     ids:
-      - template-go
+      - incus-guest-agent
     formats:
       - tar.gz
-    format_overrides:
-      - goos: windows
-        formats:
-          - zip
     name_template: >-
       {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
 
-nfpms:
-  - id: release
-    ids:
-      - template-go
-    vendor: Meigma
-    homepage: https://github.com/meigma/template-go
-    maintainer: Meigma
-    description: Meigma Go repository template application.
-    license: Apache-2.0 OR MIT
-    formats:
-      - deb
-      - rpm
-      - apk
-    bindir: /usr/bin
-    rpm:
-      signature:
-        key_file: "{{ .Env.RELEASE_RPM_SIGNING_KEY_FILE }}"
-    apk:
-      signature:
-        key_file: "{{ .Env.RELEASE_APK_SIGNING_KEY_FILE }}"
-        key_name: template-go-001
-
-homebrew_casks:
-  - name: template-go
-    ids:
-      - template-go
-    binaries:
-      - template-go
-    repository:
-      owner: meigma
-      name: homebrew-tap
-    homepage: https://github.com/meigma/template-go
-    description: Meigma Go repository template application
-    license: Apache-2.0 OR MIT
-    url:
-      template: "https://github.com/meigma/template-go/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
-    skip_upload: true
-
-scoops:
-  - name: template-go
-    ids:
-      - template-go
-    repository:
-      owner: meigma
-      name: scoop-bucket
-    homepage: https://github.com/meigma/template-go
-    description: Meigma Go repository template application
-    license: Apache-2.0 OR MIT
-    url_template: "https://github.com/meigma/template-go/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
-    skip_upload: true
+source:
+  enabled: true
 
 checksum:
   name_template: checksums.txt
@@ -117,9 +52,9 @@ checksum:
 sboms:
   - id: archives
     artifacts: archive
-  - id: packages
-    artifacts: package
 
+# The Sigstore bundle over checksums.txt is the signature the reusable
+# publisher verifies before it uploads any asset.
 signs:
   - id: checksums
     cmd: cosign
@@ -134,5 +69,7 @@ signs:
 changelog:
   disable: true
 
+# Release Please owns the tag and the changelog; the reusable publisher owns
+# the GitHub Release. GoReleaser only stages and hands off.
 release:
   disable: true

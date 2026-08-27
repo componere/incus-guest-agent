@@ -6,11 +6,10 @@ contents:
   packages:
     - wolfi-baselayout
     - ca-certificates-bundle
-    - tzdata
-    - template-go
+    - incus-guest-agent
 
 entrypoint:
-  command: /usr/bin/template-go
+  command: /usr/bin/incus-guest-agent
 
 accounts:
   groups:
@@ -24,14 +23,13 @@ accounts:
 
 environment:
   PATH: /usr/bin
-  SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
 
 archs:
   - amd64
   - arm64
 
 annotations:
-  org.opencontainers.image.title: template-go
-  org.opencontainers.image.description: Meigma Go repository template application
-  org.opencontainers.image.source: https://github.com/meigma/template-go
+  org.opencontainers.image.title: incus-guest-agent
+  org.opencontainers.image.description: Incus guest agent supervisor for Talos static pods
+  org.opencontainers.image.source: https://github.com/componere/incus-guest-agent
   org.opencontainers.image.licenses: Apache-2.0 OR MIT

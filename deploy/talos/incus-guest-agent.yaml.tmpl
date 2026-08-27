@@ -1,0 +1,26 @@
+machine:
+  pods:
+    - apiVersion: v1
+      kind: Pod
+      metadata:
+        name: incus-guest-agent
+        namespace: kube-system
+      spec:
+        restartPolicy: Always
+        hostNetwork: true
+        containers:
+          - name: agent
+            image: ghcr.io/componere/incus-guest-agent@sha256:<digest>
+            imagePullPolicy: IfNotPresent
+            securityContext:
+              privileged: true
+              runAsUser: 0
+              runAsGroup: 0
+            volumeMounts:
+              - name: dev
+                mountPath: /dev
+        volumes:
+          - name: dev
+            hostPath:
+              path: /dev
+              type: Directory

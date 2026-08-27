@@ -1,26 +1,27 @@
 # Security Policy
 
-This template expects generated projects to use GitHub private vulnerability reporting.
-Replace this file with the actual support policy before publishing a generated repository.
+## Supported versions
 
-## Supported Versions
+This project does not publish a multi-version support window. When reporting a
+problem, include the exact release version and OCI digest that you tested.
 
-Do not claim support windows or release lines until the generated project actually maintains them.
-For a brand-new project, a short policy such as "only the latest release is supported" is usually enough.
+## Reporting a vulnerability
 
-## Reporting a Vulnerability
+Report vulnerabilities through
+[GitHub private vulnerability reporting](https://github.com/componere/incus-guest-agent/security/advisories/new).
 
-Report vulnerabilities privately through GitHub's private vulnerability reporting flow when it is enabled for the generated repository.
+Do not disclose a vulnerability in a public issue, pull request, discussion, or
+chat channel.
 
-Do not use public GitHub issues, pull requests, discussions, chat channels, or other public forums for vulnerability reports.
+Include:
 
-When reporting a vulnerability, include as much of the following as possible:
+- the affected release version, commit, and OCI digest;
+- the Talos and Incus versions;
+- the affected runtime path;
+- reproduction steps or a minimal proof of concept;
+- the security impact; and
+- relevant logs or suggested mitigations.
 
-- affected version, commit, or deployment identifier
-- a description of the issue and the security impact
-- steps to reproduce or a minimal proof of concept
-- any relevant logs, screenshots, or traces
-- any suggested mitigations or fixes, if available
+Do not include production credentials, certificates, or private keys in the
+report.
 
-If the project has a documented disclosure timeline, add it here.
-If not, keep the policy short and avoid inventing guarantees.
