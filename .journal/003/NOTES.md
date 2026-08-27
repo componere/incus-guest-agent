@@ -51,3 +51,11 @@ mkdocs-material in docs/uv.lock. Fixed via uv lock --upgrade-package
 pymdown-extensions (10.21.3 -> 11.0.2), strict docs build verified, PR #13
 squash-merged as d1def9b. Both alerts now show state=fixed. Remaining open PR
 is release-please 1.0.0 (#9) — intentionally left for the user.
+
+## 2026-08-26 18:40 — Release pinned to 0.1.0
+Release-please PR #9 proposed 1.0.0 (default when no release exists; the
+bump-minor-pre-major flags only govern later bumps). Added
+"initial-version": "0.1.0" to release-please-config.json (verified against
+the current upstream config schema), merged as PR #14 (0f3f563). The
+push-triggered workflow rewrote PR #9 to "chore(master): release 0.1.0".
+PR #9 left open for the user to cut the release.
