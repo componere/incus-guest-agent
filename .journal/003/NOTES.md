@@ -28,3 +28,10 @@ CONTRIBUTING task list (root:check also runs docs:build — README now says so),
 kubelet/wrapper actor ambiguity, vague AF_VSOCK bullet, index.md trailing
 imperative. Verified with moon run docs:build (mkdocs --strict) — pass.
 Branch docs/style-pass, PR #12 open awaiting review.
+
+## 2026-08-26 18:02 — README restructure
+Per user follow-up: README now leads with what/why (Talos immutable, no agent
+loader → incus info/exec and /dev/incus/sock need the static pod), adds a
+minimal attach/render/apply quickstart deferring to the install guide, and all
+doc links now target the live GitHub Pages site (URL scheme verified against
+the deployed site). Pushed de25a79 to docs/style-pass; PR #12 body updated.
