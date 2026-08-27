@@ -59,3 +59,19 @@ bump-minor-pre-major flags only govern later bumps). Added
 the current upstream config schema), merged as PR #14 (0f3f563). The
 push-triggered workflow rewrote PR #9 to "chore(master): release 0.1.0".
 PR #9 left open for the user to cut the release.
+
+## 2026-08-26 18:55 — Release pre-flight check
+Verified the full v0.1.0 release path (meigma/release pinned at 0dee66f =
+v0.1.17): org var COMPONERE_RELEASE_APP_CLIENT_ID + secret
+..._PRIVATE_KEY exist (selected visibility; proven readable by the
+release-please run), tag ruleset "Default tags" (~ALL, required_signatures)
+has the release app (Integration 4551177) as always-bypass, all four reusable
+workflow input/output/secret contracts match release.yml, actions policy
+allows all. Local rehearsal: goreleaser check OK (ldflags stamp
+main.version/commit/date), mise run image-local OK (melange sign -> apko ->
+docker run --version/--help, entrypoint /usr/bin/incus-guest-agent, user
+65532, arm64). Pin is 4 commits behind meigma/release main (docs + multi-
+binary feature only; no fixes needed). GHCR package does not exist yet ->
+first publish creates it PRIVATE; post-release must verify repo link + set
+public or Talos nodes fail anonymous pulls (CONTRIBUTING documents this).
+PR #9 (release 0.1.0) MERGEABLE/CLEAN. Pre-flight: GO.
