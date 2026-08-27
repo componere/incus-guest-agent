@@ -160,3 +160,30 @@ PR #8 passed its final `ci` and GitHub Pages checks and was squash-merged into
 `master` as `b6e0c278967f8209d136a55dce816b58ee90ddf8`. The implementation plan is
 complete. The feature worktree remains available until an explicit session
 close or cleanup request.
+
+## 2026-08-26 17:29 — Repository configuration converged
+
+Ran the repository configuration workflow. The initial plan exposed a stale
+`is_template = true` value that would have converted this product repository
+back into a GitHub template. Corrected it through PR #10, merged as
+`0ca307582653dbe523fc59aa89a941ec1b0295a7`.
+
+The first apply successfully updated general settings, immutable releases,
+private vulnerability reporting, automated security fixes, and the default
+branch ruleset. GitHub rejected the tag ruleset because the stale
+`meigma-release-please` bypass app is not installed in the `componere`
+organization. Release PR #9 identified the installed actor as
+`app/componere-release`; corrected the manifest through PR #11, merged as
+`3f0222e995780ad97975d5242a0f6644908a812a`.
+
+The second apply created the protected tag ruleset with the installed release
+app and repository administrators as bypass actors. A final plan reported no
+supported changes required. Direct API checks confirmed the repository remains
+non-template, only squash merging is enabled, merged branches are deleted, and
+both managed rulesets are active.
+
+Enabling Dependabot alerts surfaced two open `pymdown-extensions` advisories in
+`docs/uv.lock`: one high-severity ReDoS and one medium-severity path traversal.
+They are outside the repository-configuration request and remain for dependency
+remediation. The script also continues to report its documented unsupported
+manual settings.
