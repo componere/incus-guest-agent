@@ -75,3 +75,15 @@ binary feature only; no fixes needed). GHCR package does not exist yet ->
 first publish creates it PRIVATE; post-release must verify repo link + set
 public or Talos nodes fail anonymous pulls (CONTRIBUTING documents this).
 PR #9 (release 0.1.0) MERGEABLE/CLEAN. Pre-flight: GO.
+
+## 2026-08-26 19:20 — v0.1.0 released
+Merged PR #9; release-please created tag v0.1.0 + draft release; the tag
+pipeline (go-pre-publish -> go-oci-build -> publish-oci-image ->
+publish-github-release) went green in ~4 min. Release published (undrafted)
+with checksums.txt(+sigstore), per-arch tarballs + SBOMs. Image
+ghcr.io/componere/incus-guest-agent:0.1.0 (index digest sha256:c938c2c6...,
+amd64+arm64). Surprise: package was created PUBLIC and auto-linked to the
+repo (no manual visibility flip needed — pre-flight assumption of
+default-private did not hold for this publish path). Verified: anonymous
+manifest fetch HTTP 200, docker run --version prints 0.1.0, provenance
+attestation verifies via gh attestation verify.
