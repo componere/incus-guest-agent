@@ -6,7 +6,7 @@ tool github.com/vektra/mockery/v3
 
 require (
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/sys v0.47.0
+	golang.org/x/sys v0.49.0
 )
 
 require (
